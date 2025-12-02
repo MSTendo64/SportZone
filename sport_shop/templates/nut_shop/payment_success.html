@@ -1,0 +1,10 @@
+{% extends 'nut_shop/base.html' %}
+
+{% block title %}Оплата успешна - Орех Маркет{% endblock %}
+
+{% block content %}
+<h2>Оплата успешно выполнена</h2>
+<p>Ваш заказ № {{ order.id }} успешно оплачен и передан в обработку.</p>
+<p>Спасибо за покупку!</p>
+<a href="{% url 'order_confirmation' order.id %}" class="btn btn-primary">Подробности заказа</a>
+{% endblock %}

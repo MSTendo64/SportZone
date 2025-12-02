@@ -1,0 +1,136 @@
+{% extends 'nut_shop/base.html' %}
+{% load custom_filters %}
+
+{% block title %}Оформление заказа - SportZone{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-form {
+        background: var(--bg-white);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: var(--text-dark);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: var(--transition);
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1);
+    }
+    
+    .order-summary-card {
+        background: var(--bg-white);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow-md);
+        position: sticky;
+        top: 100px;
+    }
+    
+    .order-item-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .order-item-row:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="section-title">Оформление заказа</h1>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="checkout-form">
+                <h2 style="margin-bottom: 25px; font-weight: 600;">Данные для доставки</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label class="form-label">{{ form.full_name.label }}</label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <div class="text-danger mt-1">{{ form.full_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">{{ form.address.label }}</label>
+                        {{ form.address }}
+                        {% if form.address.errors %}
+                            <div class="text-danger mt-1">{{ form.address.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">{{ form.payment_method.label }}</label>
+                        {{ form.payment_method }}
+                        {% if form.payment_method.errors %}
+                            <div class="text-danger mt-1">{{ form.payment_method.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px;">
+                        <i class="fas fa-check me-2"></i>Оформить заказ
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="order-summary-card">
+                <h3 style="margin-bottom: 20px; font-weight: 600;">Ваш заказ</h3>
+                
+                <div style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;">
+                    {% for variant_id, quantity in request.session.cart.items %}
+                        {% with variant=variant_id|get_variant %}
+                            {% if variant %}
+                            <div class="order-item-row">
+                                <div>
+                                    <div style="font-weight: 600;">{{ variant.product.name }}</div>
+                                    <div style="font-size: 0.85rem; color: var(--text-light);">{{ variant.weight }}г × {{ quantity }} шт.</div>
+                                </div>
+                                <div style="font-weight: 600; color: var(--primary-color);">
+                                    {{ variant.price|floatformat:0 }} ₽
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                    {% endfor %}
+                </div>
+                
+                <div class="total-row final" style="padding-top: 15px; border-top: 2px solid var(--border-color);">
+                    <span>Итого:</span>
+                    <span>{{ total_price|floatformat:0 }} ₽</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

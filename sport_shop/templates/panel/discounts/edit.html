@@ -1,0 +1,127 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}{% if discount %}Редактировать{% else %}Добавить{% endif %} скидку - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">{% if discount %}Редактировать скидку{% else %}Добавить скидку{% endif %}</h2>
+    <a href="{% url 'panel_discounts' %}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="stat-card">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group mb-3">
+            <label class="form-label">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-danger mt-1">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3">
+            <label class="form-label">{{ form.discount_type.label }}</label>
+            {{ form.discount_type }}
+            {% if form.discount_type.errors %}
+                <div class="text-danger mt-1">{{ form.discount_type.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3" id="product-field">
+            <label class="form-label">{{ form.product.label }}</label>
+            {{ form.product }}
+            {% if form.product.errors %}
+                <div class="text-danger mt-1">{{ form.product.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3" id="category-field">
+            <label class="form-label">{{ form.category.label }}</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div class="text-danger mt-1">{{ form.category.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3">
+            <label class="form-label">{{ form.discount_percent.label }}</label>
+            {{ form.discount_percent }}
+            {% if form.discount_percent.errors %}
+                <div class="text-danger mt-1">{{ form.discount_percent.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3">
+            <label class="form-label">{{ form.discount_amount.label }}</label>
+            {{ form.discount_amount }}
+            {% if form.discount_amount.errors %}
+                <div class="text-danger mt-1">{{ form.discount_amount.errors }}</div>
+            {% endif %}
+            <small class="text-muted">Оставьте пустым, если используете процентную скидку</small>
+        </div>
+        
+        <div class="form-group mb-3">
+            <div class="form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    {{ form.is_active.label }}
+                </label>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label class="form-label">{{ form.start_date.label }}</label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                        <div class="text-danger mt-1">{{ form.start_date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label class="form-label">{{ form.end_date.label }}</label>
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}
+                        <div class="text-danger mt-1">{{ form.end_date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'panel_discounts' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDiscountFields() {
+    const type = document.querySelector('[name="discount_type"]').value;
+    const productField = document.getElementById('product-field');
+    const categoryField = document.getElementById('category-field');
+    
+    if (type === 'product') {
+        productField.style.display = 'block';
+        categoryField.style.display = 'none';
+    } else if (type === 'category') {
+        productField.style.display = 'none';
+        categoryField.style.display = 'block';
+    } else {
+        productField.style.display = 'none';
+        categoryField.style.display = 'none';
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleDiscountFields();
+    document.querySelector('[name="discount_type"]').addEventListener('change', toggleDiscountFields);
+});
+</script>
+{% endblock %}
+

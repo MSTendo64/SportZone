@@ -1,0 +1,185 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Скидки - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">Скидки</h2>
+    <a href="{% url 'panel_discount_add' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Добавить скидку
+    </a>
+</div>
+
+<div class="stat-card mb-4">
+    <h5>Быстрое добавление скидки</h5>
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group mb-3">
+            <label class="form-label">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-danger mt-1">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3">
+            <label class="form-label">{{ form.discount_type.label }}</label>
+            {{ form.discount_type }}
+            {% if form.discount_type.errors %}
+                <div class="text-danger mt-1">{{ form.discount_type.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3" id="product-field" style="display: none;">
+            <label class="form-label">{{ form.product.label }}</label>
+            {{ form.product }}
+            {% if form.product.errors %}
+                <div class="text-danger mt-1">{{ form.product.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group mb-3" id="category-field" style="display: none;">
+            <label class="form-label">{{ form.category.label }}</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div class="text-danger mt-1">{{ form.category.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label class="form-label">{{ form.discount_percent.label }}</label>
+                    {{ form.discount_percent }}
+                    {% if form.discount_percent.errors %}
+                        <div class="text-danger mt-1">{{ form.discount_percent.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label class="form-label">{{ form.discount_amount.label }}</label>
+                    {{ form.discount_amount }}
+                    {% if form.discount_amount.errors %}
+                        <div class="text-danger mt-1">{{ form.discount_amount.errors }}</div>
+                    {% endif %}
+                    <small class="text-muted">Оставьте пустым, если используете процентную скидку</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group mb-3">
+            <div class="form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    {{ form.is_active.label }}
+                </label>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label class="form-label">{{ form.start_date.label }}</label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}
+                        <div class="text-danger mt-1">{{ form.start_date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group mb-3">
+                    <label class="form-label">{{ form.end_date.label }}</label>
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}
+                        <div class="text-danger mt-1">{{ form.end_date.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Добавить</button>
+    </form>
+</div>
+
+<div class="stat-card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Тип</th>
+                    <th>Скидка</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for discount in discounts %}
+                <tr>
+                    <td>{{ discount.name }}</td>
+                    <td>{{ discount.get_discount_type_display }}</td>
+                    <td>
+                        {% if discount.discount_amount %}
+                            {{ discount.discount_amount|floatformat:0 }} ₽
+                        {% else %}
+                            {{ discount.discount_percent }}%
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if discount.is_active %}
+                            <span class="badge bg-success">Активна</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Неактивна</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'panel_discount_edit' discount.id %}" class="btn btn-sm btn-primary" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'panel_discount_delete' discount.id %}" class="btn btn-sm btn-danger" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Скидки не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDiscountFields() {
+    const type = document.querySelector('[name="discount_type"]').value;
+    const productField = document.getElementById('product-field');
+    const categoryField = document.getElementById('category-field');
+    
+    if (type === 'product') {
+        productField.style.display = 'block';
+        categoryField.style.display = 'none';
+    } else if (type === 'category') {
+        productField.style.display = 'none';
+        categoryField.style.display = 'block';
+    } else {
+        productField.style.display = 'none';
+        categoryField.style.display = 'none';
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleDiscountFields();
+    const discountTypeField = document.querySelector('[name="discount_type"]');
+    if (discountTypeField) {
+        discountTypeField.addEventListener('change', toggleDiscountFields);
+    }
+});
+</script>
+{% endblock %}

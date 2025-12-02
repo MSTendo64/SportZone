@@ -1,0 +1,70 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Заказ #{{ order.id }} - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">Заказ #{{ order.id }}</h2>
+    <a href="{% url 'panel_orders' %}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="stat-card mb-4">
+            <h5>Товары в заказе</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Товар</th>
+                            <th>Вес</th>
+                            <th>Количество</th>
+                            <th>Цена</th>
+                            <th>Итого</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.product_variant.product.name }}</td>
+                            <td>{{ item.product_variant.weight }}г</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price|floatformat:0 }} ₽</td>
+                            <td>{% widthratio item.price 1 item.quantity %} ₽</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-3">
+                <h4>Итого: {{ order.total_price|floatformat:0 }} ₽</h4>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card mb-4">
+            <h5>Информация о заказе</h5>
+            <p><strong>Пользователь:</strong> {{ order.user.username }}</p>
+            <p><strong>Имя:</strong> {{ order.full_name }}</p>
+            <p><strong>Адрес:</strong> {{ order.address }}</p>
+            <p><strong>Способ оплаты:</strong> {{ order.payment_method.name|default:"-" }}</p>
+            <p><strong>Дата:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+        </div>
+        
+        <div class="stat-card">
+            <h5>Изменить статус</h5>
+            <form method="post">
+                {% csrf_token %}
+                <select name="status" class="form-control mb-3">
+                    {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if order.status == status_code %}selected{% endif %}>{{ status_name }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary w-100">Обновить статус</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,12 @@
+{% extends 'nut_shop/base.html' %}
+
+{% block title %}Оплата по реквизитам - SportZone{% endblock %}
+
+{% block content %}
+<h2>Оплата по реквизитам</h2>
+<p>Ваш заказ № {{ order.id }} ожидает оплаты.</p>
+<p>Пожалуйста, переведите {{ order.total_price }} руб. на указанный счет: {{ bank_account }}</p>
+<p>После оплаты, пожалуйста, свяжитесь с нами для подтверждения платежа.</p>
+<p>Статус вашего заказа: {{ order.get_status_display }}</p>
+<a href="{% url 'order_history' %}" class="btn btn-primary mt-3">Перейти к истории заказов</a>
+{% endblock %}

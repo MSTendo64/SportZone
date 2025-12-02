@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'custom_admin' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'custom_model_view' app_label=app_label model_name=model_name %}">{{ model_name|capfirst }}</a>
+&rsaquo; {% translate 'Add' %}
+</div>
+{% endblock %}

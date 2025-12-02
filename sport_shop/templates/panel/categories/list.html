@@ -1,0 +1,56 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Категории - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">Категории</h2>
+</div>
+
+<div class="stat-card mb-4">
+    <h5>Добавить категорию</h5>
+    <form method="post" class="row g-3">
+        {% csrf_token %}
+        <div class="col-md-8">
+            <input type="text" name="name" class="form-control" placeholder="Название категории" required>
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">Добавить</button>
+        </div>
+    </form>
+</div>
+
+<div class="stat-card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Товаров</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.id }}</td>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.products.count }}</td>
+                    <td>
+                        <a href="{% url 'panel_category_delete' category.id %}" class="btn btn-sm btn-danger" title="Удалить">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">Категории не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+

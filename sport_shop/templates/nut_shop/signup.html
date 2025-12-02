@@ -1,0 +1,111 @@
+{% extends 'nut_shop/base.html' %}
+
+{% block title %}Регистрация - SportZone{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-control:focus {
+        border-color: #5a4a2f;
+        box-shadow: 0 0 0 0.2rem rgba(90, 74, 47, 0.25);
+    }
+    .btn-primary {
+        background-color: #5a4a2f;
+        border-color: #5a4a2f;
+    }
+    .btn-primary:hover, .btn-primary:focus {
+        background-color: #463a25;
+        border-color: #463a25;
+    }
+    .form-label {
+        color: #5a4a2f;
+    }
+    .password-requirements {
+        font-size: 0.9em;
+        margin-top: 5px;
+        display: none;
+    }
+    .requirement {
+        color: #dc3545;
+        display: none;
+    }
+    .requirement.met {
+        color: #28a745;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="mb-4">Регистрация</h2>
+            <form method="post" id="signup-form">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ field.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% if field.name == 'password1' %}
+                        <div class="password-requirements">
+                            <p class="requirement" id="length">Минимум 8 символов</p>
+                            <p class="requirement" id="number">Содержит цифру</p>
+                            <p class="requirement" id="uppercase">Содержит заглавную букву</p>
+                            <p class="requirement" id="lowercase">Содержит строчную букву</p>
+                            <p class="requirement" id="special">Содержит специальный символ</p>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const password = document.getElementById('id_password1');
+    const requirements = {
+        length: document.getElementById('length'),
+        number: document.getElementById('number'),
+        uppercase: document.getElementById('uppercase'),
+        lowercase: document.getElementById('lowercase'),
+        special: document.getElementById('special')
+    };
+    const passwordRequirements = document.querySelector('.password-requirements');
+
+    password.addEventListener('input', function() {
+        const value = this.value;
+        let allMet = true;
+        
+        passwordRequirements.style.display = 'block';
+
+        const checks = {
+            length: value.length >= 8,
+            number: /\d/.test(value),
+            uppercase: /[A-Z]/.test(value),
+            lowercase: /[a-z]/.test(value),
+            special: /[!@#$%^&*(),.?":{}|<>]/.test(value)
+        };
+
+        for (let req in checks) {
+            if (checks[req]) {
+                requirements[req].style.display = 'none';
+            } else {
+                requirements[req].style.display = 'block';
+                allMet = false;
+            }
+        }
+
+        if (allMet) {
+            passwordRequirements.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,580 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}{% if product %}Редактировать{% else %}Добавить{% endif %} товар - Панель управления{% endblock %}
+
+{% block extra_css %}
+<style>
+    .editor-toolbar {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+        border-radius: 8px 8px 0 0;
+        padding: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .editor-btn {
+        background: white;
+        border: 1px solid #dee2e6;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+    .editor-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+    .editor-btn.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+    .rich-text-editor {
+        border-radius: 0 0 8px 8px;
+        border-top: none;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        color: var(--text-dark);
+    }
+    
+    /* Кастомное модальное окно */
+    .custom-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .custom-modal-overlay.show {
+        display: flex;
+    }
+    
+    .custom-modal {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+    }
+    
+    .custom-modal-overlay.show .custom-modal {
+        transform: scale(1);
+    }
+    
+    .custom-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .custom-modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 0;
+    }
+    
+    .custom-modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #6c757d;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+    
+    .custom-modal-close:hover {
+        background: #f8f9fa;
+        color: var(--text-dark);
+    }
+    
+    .custom-modal-body {
+        padding: 20px;
+    }
+    
+    .custom-modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #dee2e6;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    .custom-modal-input {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+        margin-bottom: 15px;
+    }
+    
+    .custom-modal-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1);
+    }
+    
+    .custom-modal-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    
+    .color-preview {
+        width: 40px;
+        height: 40px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: inline-block;
+    }
+    
+    @media (max-width: 768px) {
+        .custom-modal {
+            width: 95%;
+            max-width: none;
+            margin: 20px;
+            max-height: 85vh;
+        }
+        
+        .custom-modal-header {
+            padding: 15px;
+        }
+        
+        .custom-modal-body {
+            padding: 15px;
+        }
+        
+        .custom-modal-footer {
+            padding: 12px 15px;
+            flex-direction: column-reverse;
+        }
+        
+        .custom-modal-footer .btn {
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .custom-modal-input {
+            font-size: 16px; /* Предотвращает зум на iOS */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">{% if product %}Редактировать товар{% else %}Добавить товар{% endif %}</h2>
+    <a href="{% url 'panel_products' %}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="stat-card">
+    <form method="post" enctype="multipart/form-data" id="product-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div class="text-danger mt-1">{{ form.name.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">{{ form.category.label }}</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+                <div class="text-danger mt-1">{{ form.category.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">{{ form.description_text.label }}</label>
+            {% if form.description_text.help_text %}
+                <small class="text-muted d-block mb-2">{{ form.description_text.help_text }}</small>
+            {% endif %}
+            
+            <!-- Панель инструментов редактора -->
+            <div class="editor-toolbar">
+                <button type="button" class="editor-btn" data-command="bold" title="Жирный">
+                    <i class="fas fa-bold"></i>
+                </button>
+                <button type="button" class="editor-btn" data-command="italic" title="Курсив">
+                    <i class="fas fa-italic"></i>
+                </button>
+                <button type="button" class="editor-btn" data-command="underline" title="Подчеркнутый">
+                    <i class="fas fa-underline"></i>
+                </button>
+                <div class="editor-btn" style="width: 1px; padding: 0; margin: 0 5px;"></div>
+                <button type="button" class="editor-btn" data-command="paragraph" title="Параграф">
+                    <i class="fas fa-paragraph"></i>
+                </button>
+                <button type="button" class="editor-btn" data-command="link" title="Ссылка">
+                    <i class="fas fa-link"></i>
+                </button>
+                <button type="button" class="editor-btn" data-command="color" title="Цвет">
+                    <i class="fas fa-palette"></i>
+                </button>
+                <button type="button" class="editor-btn" data-command="image" title="Изображение">
+                    <i class="fas fa-image"></i>
+                </button>
+                <button type="button" class="editor-btn" data-command="video" title="Видео">
+                    <i class="fas fa-video"></i>
+                </button>
+            </div>
+            
+            {{ form.description_text }}
+            {% if form.description_text.errors %}
+                <div class="text-danger mt-1">{{ form.description_text.errors }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'panel_products' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+<!-- Кастомное модальное окно -->
+<div class="custom-modal-overlay" id="customModal">
+    <div class="custom-modal">
+        <div class="custom-modal-header">
+            <h5 class="custom-modal-title" id="modalTitle">Введите данные</h5>
+            <button type="button" class="custom-modal-close" onclick="closeCustomModal()">&times;</button>
+        </div>
+        <div class="custom-modal-body" id="modalBody">
+            <!-- Контент будет добавлен динамически -->
+        </div>
+        <div class="custom-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeCustomModal()">Отмена</button>
+            <button type="button" class="btn btn-primary" id="modalConfirmBtn" onclick="confirmModal()">Подтвердить</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Глобальные функции для модального окна
+function closeCustomModal() {
+    const modal = document.getElementById('customModal');
+    if (modal) {
+        modal.classList.remove('show');
+        modal._callback = null;
+    }
+}
+
+function confirmModal() {
+    const modal = document.getElementById('customModal');
+    if (!modal) return;
+    
+    const inputs = modal.querySelectorAll('.custom-modal-input');
+    const values = Array.from(inputs).map(input => input.value.trim());
+    
+    if (modal._callback) {
+        modal._callback(values);
+    }
+    
+    closeCustomModal();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editor = document.getElementById('description-editor');
+    const toolbar = document.querySelector('.editor-toolbar');
+    
+    // Функция для получения позиции курсора в textarea
+    function getCursorPosition(textarea) {
+        return textarea.selectionStart;
+    }
+    
+    // Функция для установки позиции курсора
+    function setCursorPosition(textarea, position) {
+        textarea.setSelectionRange(position, position);
+        textarea.focus();
+    }
+    
+    // Функция для вставки текста в позицию курсора
+    function insertTextAtCursor(textarea, text) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        // Если есть выделенный текст, заменяем его
+        if (selectedText) {
+            textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(end);
+            setCursorPosition(textarea, start + text.length);
+        } else {
+            // Вставляем текст в позицию курсора
+            textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(end);
+            setCursorPosition(textarea, start + text.length);
+        }
+    }
+    
+    // Переменные для модального окна
+    let currentCommand = null;
+    let currentSelectedText = '';
+    
+    // Функция для показа кастомного модального окна
+    function showCustomModal(title, inputs, callback) {
+        const modal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        
+        modalTitle.textContent = title;
+        modalBody.innerHTML = '';
+        
+        inputs.forEach((input, index) => {
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'mb-3';
+            
+            const label = document.createElement('label');
+            label.className = 'custom-modal-label';
+            label.textContent = input.label;
+            label.setAttribute('for', `modalInput${index}`);
+            
+            const inputEl = document.createElement('input');
+            inputEl.type = input.type || 'text';
+            inputEl.id = `modalInput${index}`;
+            inputEl.className = 'custom-modal-input';
+            inputEl.placeholder = input.placeholder || '';
+            inputEl.value = input.value || '';
+            
+            if (input.readonly) {
+                inputEl.readOnly = true;
+                inputEl.style.backgroundColor = '#f8f9fa';
+                inputEl.style.cursor = 'not-allowed';
+            }
+            
+            if (input.type === 'color') {
+                inputEl.type = 'text';
+                inputEl.pattern = '^#[0-9A-Fa-f]{6}$';
+                inputEl.placeholder = '#RRGGBB';
+                inputEl.maxLength = 7;
+                
+                const preview = document.createElement('div');
+                preview.className = 'color-preview';
+                preview.style.backgroundColor = input.value || '#000000';
+                
+                inputEl.addEventListener('input', function() {
+                    if (this.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+                        preview.style.backgroundColor = this.value;
+                    }
+                });
+                
+                inputGroup.appendChild(label);
+                inputGroup.appendChild(inputEl);
+                inputGroup.appendChild(preview);
+            } else {
+                inputGroup.appendChild(label);
+                inputGroup.appendChild(inputEl);
+            }
+            
+            modalBody.appendChild(inputGroup);
+        });
+        
+        // Сохраняем callback
+        modal._callback = callback;
+        
+        // Показываем модальное окно
+        modal.classList.add('show');
+        
+        // Фокус на первый input
+        const firstInput = modalBody.querySelector('input');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 100);
+        }
+        
+        // Обработка клавиш
+        const keyHandler = function(e) {
+            if (e.key === 'Escape') {
+                closeCustomModal();
+                document.removeEventListener('keydown', keyHandler);
+            } else if (e.key === 'Enter' && e.target.classList.contains('custom-modal-input')) {
+                e.preventDefault();
+                confirmModal();
+                document.removeEventListener('keydown', keyHandler);
+            }
+        };
+        document.addEventListener('keydown', keyHandler);
+    }
+    
+    // Закрытие по клику на overlay
+    const modalOverlay = document.getElementById('customModal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCustomModal();
+            }
+        });
+    }
+    
+    // Функция для выполнения команд форматирования
+    function execCommand(command) {
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        currentSelectedText = editor.value.substring(start, end);
+        currentCommand = command;
+        
+        switch(command) {
+            case 'bold':
+                if (currentSelectedText) {
+                    insertTextAtCursor(editor, `<b>${currentSelectedText}</b>`);
+                } else {
+                    insertTextAtCursor(editor, `<b></b>`);
+                    setCursorPosition(editor, start + 3);
+                }
+                break;
+            case 'italic':
+                if (currentSelectedText) {
+                    insertTextAtCursor(editor, `<i>${currentSelectedText}</i>`);
+                } else {
+                    insertTextAtCursor(editor, `<i></i>`);
+                    setCursorPosition(editor, start + 3);
+                }
+                break;
+            case 'underline':
+                if (currentSelectedText) {
+                    insertTextAtCursor(editor, `<u>${currentSelectedText}</u>`);
+                } else {
+                    insertTextAtCursor(editor, `<u></u>`);
+                    setCursorPosition(editor, start + 3);
+                }
+                break;
+            case 'paragraph':
+                showCustomModal('Добавить параграф', [
+                    { label: 'Текст параграфа', placeholder: 'Введите текст параграфа' }
+                ], function(values) {
+                    if (values[0]) {
+                        insertTextAtCursor(editor, `<p>${values[0]}</p>\n`);
+                    }
+                });
+                break;
+            case 'link':
+                showCustomModal('Добавить ссылку', [
+                    { label: 'URL ссылки', placeholder: 'https://example.com' },
+                    { label: 'Текст ссылки', placeholder: 'Текст ссылки', value: currentSelectedText || 'ссылка' }
+                ], function(values) {
+                    if (values[0]) {
+                        const linkText = values[1] || 'ссылка';
+                        insertTextAtCursor(editor, `<link="${values[0]}">${linkText}</link>`);
+                    }
+                });
+                break;
+            case 'color':
+                showCustomModal('Добавить цветной текст', [
+                    { label: 'Цвет (#RRGGBB)', placeholder: '#FF0000', type: 'color', value: '#FF0000' },
+                    { label: 'Текст', placeholder: 'Текст', value: currentSelectedText || 'текст' }
+                ], function(values) {
+                    if (values[0] && values[0].match(/^#[0-9A-Fa-f]{6}$/i)) {
+                        const colorText = values[1] || 'текст';
+                        insertTextAtCursor(editor, `<color="${values[0]}">${colorText}</color>`);
+                    } else {
+                    // Показываем сообщение об ошибке
+                    const errorModal = document.getElementById('customModal');
+                    const errorTitle = document.getElementById('modalTitle');
+                    const errorBody = document.getElementById('modalBody');
+                    const errorConfirm = document.getElementById('modalConfirmBtn');
+                    
+                    errorTitle.textContent = 'Ошибка';
+                    errorBody.innerHTML = '<div style="color: #dc3545; padding: 10px 0;"><i class="fas fa-exclamation-triangle me-2"></i>Введите правильный цвет в формате #RRGGBB (например, #FF0000)</div>';
+                    errorConfirm.textContent = 'Понятно';
+                    errorConfirm.onclick = function() {
+                        closeCustomModal();
+                        // Показываем модальное окно снова для ввода цвета
+                        setTimeout(function() {
+                            showCustomModal('Добавить цветной текст', [
+                                { label: 'Цвет (#RRGGBB)', placeholder: '#FF0000', type: 'color', value: values[0] || '#FF0000' },
+                                { label: 'Текст', placeholder: 'Текст', value: values[1] || currentSelectedText || 'текст' }
+                            ], function(newValues) {
+                                if (newValues[0] && newValues[0].match(/^#[0-9A-Fa-f]{6}$/i)) {
+                                    const colorText = newValues[1] || 'текст';
+                                    insertTextAtCursor(editor, `<color="${newValues[0]}">${colorText}</color>`);
+                                }
+                            });
+                        }, 300);
+                    };
+                    errorModal._callback = null;
+                    errorModal.classList.add('show');
+                    }
+                });
+                break;
+            case 'image':
+                showCustomModal('Добавить изображение', [
+                    { label: 'URL изображения', placeholder: 'https://example.com/image.jpg' }
+                ], function(values) {
+                    if (values[0]) {
+                        insertTextAtCursor(editor, `<image>${values[0]}</image>`);
+                    }
+                });
+                break;
+            case 'video':
+                showCustomModal('Добавить видео', [
+                    { label: 'URL видео', placeholder: 'https://youtube.com/watch?v=...' }
+                ], function(values) {
+                    if (values[0]) {
+                        insertTextAtCursor(editor, `<vid>${values[0]}</vid>`);
+                    }
+                });
+                break;
+        }
+    }
+    
+    // Обработчики кнопок
+    toolbar.querySelectorAll('.editor-btn[data-command]').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            editor.focus();
+            execCommand(this.dataset.command);
+        });
+    });
+    
+    // Обработка клавиш для форматирования (Ctrl+B, Ctrl+I, Ctrl+U)
+    editor.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+            if (e.key === 'b') {
+                e.preventDefault();
+                execCommand('bold');
+            } else if (e.key === 'i') {
+                e.preventDefault();
+                execCommand('italic');
+            } else if (e.key === 'u') {
+                e.preventDefault();
+                execCommand('underline');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Главная - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">Панель управления</h2>
+    <div>
+        <span style="color: var(--text-light);">Добро пожаловать, {{ user.username }}</span>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_products }}</div>
+            <div class="stat-label">Товаров</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_orders }}</div>
+            <div class="stat-label">Заказов</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Пользователей</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-value">{{ recent_orders }}</div>
+            <div class="stat-label">Заказов за неделю</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 style="margin-bottom: 20px; font-weight: 600;">Заказы по статусам</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Статус</th>
+                            <th>Количество</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status in orders_by_status %}
+                        <tr>
+                            <td>{{ status.status }}</td>
+                            <td><strong>{{ status.count }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="stat-card">
+            <h5 style="margin-bottom: 20px; font-weight: 600;">Последние заказы</h5>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Пользователь</th>
+                                <th>Сумма</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in latest_orders %}
+                            <tr>
+                                <td><a href="{% url 'panel_order_detail' order.id %}">#{{ order.id }}</a></td>
+                                <td>{{ order.user.username }}</td>
+                                <td>{{ order.total_price|floatformat:0 }} ₽</td>
+                                <td><span class="badge bg-secondary">{{ order.get_status_display }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="stat-card">
+            <h5 style="margin-bottom: 20px; font-weight: 600;">Быстрые действия</h5>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <a href="{% url 'panel_product_add' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Добавить товар
+                </a>
+                <a href="{% url 'panel_discount_add' %}" class="btn btn-success">
+                    <i class="fas fa-percent me-2"></i>Создать скидку
+                </a>
+                <a href="{% url 'panel_orders' %}" class="btn btn-info">
+                    <i class="fas fa-shopping-cart me-2"></i>Все заказы
+                </a>
+                <a href="{% url 'panel_users' %}" class="btn btn-warning">
+                    <i class="fas fa-users me-2"></i>Пользователи
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

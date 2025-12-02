@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SportZone - Иинтернет-магазин, специализирующийся на продаже спортивных товаров{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Верхняя шапка с контактами -->
+    <div class="top-header">
+        <div class="container">
+            <div class="contact-info">
+                <a href="tel:+79170136860">
+                    <i class="fas fa-phone"></i>
+                    <span>+7 999 999-99-99</span>
+                </a>
+                <a href="https://t.me/" target="_blank">
+                    <i class="fab fa-telegram"></i>
+                    <span>Telegram</span>
+                </a>
+                <a href="https://wa.me/79170136860" target="_blank">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WhatsApp</span>
+                </a>
+            </div>
+            <div class="user-menu d-none d-md-flex">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}">
+                        <i class="fas fa-user"></i>
+                        <span>Профиль</span>
+                    </a>
+                    <a href="{% url 'order_history' %}">История заказов</a>
+                    {% if user.is_superuser or user.is_staff %}
+                        <a href="{% url 'panel_dashboard' %}">
+                            <i class="fas fa-cog"></i>
+                            <span>Панель управления</span>
+                        </a>
+                    {% endif %}
+                    <form method="post" action="{% url 'logout' %}" class="d-inline logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-logout">Выйти</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}">Войти</a>
+                    <a href="{% url 'signup' %}">Регистрация</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Главная навигация -->
+    <nav class="main-navbar">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-between flex-wrap">
+                <!-- Логотип -->
+                <a href="{% url 'home' %}" class="navbar-brand">
+                    {% if logo_url %}
+                        <img src="{{ logo_url }}" alt="SportZone">
+                    {% else %}
+                        <i class="fas fa-seedling" style="color: var(--primary-color);"></i>
+                        <span>SportZone</span>
+                    {% endif %}
+                </a>
+
+                <!-- Поиск -->
+                <form class="search-bar d-none d-md-flex" action="{% url 'product_list' %}" method="get">
+                    <input type="search" name="query" placeholder="Поиск товаров..." value="{{ request.GET.query }}">
+                    <button type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+
+                <!-- Корзина -->
+                <div class="cart-icon-wrapper">
+                    <a href="{% url 'cart' %}" class="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        {% if request.user.is_authenticated and request.session.cart %}
+                            <span class="cart-badge">{{ request.session.cart|length }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <!-- Мобильное меню -->
+                <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Мобильный поиск и меню -->
+            <div class="collapse d-md-none mt-3" id="mobileMenu">
+                <form class="search-bar mb-3" action="{% url 'product_list' %}" method="get">
+                    <input type="search" name="query" placeholder="Поиск товаров..." value="{{ request.GET.query }}">
+                    <button type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+                <ul class="mobile-menu-list">
+                    <li><a href="{% url 'home' %}"><i class="fas fa-home"></i>Главная</a></li>
+                    <li><a href="{% url 'product_list' %}"><i class="fas fa-th"></i>Все товары</a></li>
+                    {% for category in categories %}
+                        <li><a href="{% url 'product_list' %}?category={{ category.id }}"><i class="fas fa-tag"></i>{{ category.name }}</a></li>
+                    {% endfor %}
+                    {% if user.is_authenticated %}
+                        <li><hr style="margin: 15px 0; border-color: var(--border-color);"></li>
+                        <li><a href="{% url 'profile' %}"><i class="fas fa-user"></i>Профиль</a></li>
+                        <li><a href="{% url 'order_history' %}"><i class="fas fa-history"></i>История заказов</a></li>
+                        {% if user.is_superuser or user.is_staff %}
+                            <li><a href="{% url 'panel_dashboard' %}"><i class="fas fa-cog"></i>Панель управления</a></li>
+                        {% endif %}
+                        <li>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link text-start p-0 w-100 mobile-logout-btn">
+                                    <i class="fas fa-sign-out-alt"></i>Выйти
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li><hr style="margin: 15px 0; border-color: var(--border-color);"></li>
+                        <li><a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i>Войти</a></li>
+                        <li><a href="{% url 'signup' %}"><i class="fas fa-user-plus"></i>Регистрация</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Навигация по категориям -->
+    <nav class="category-nav">
+        <div class="container">
+            <ul>
+                <li><a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">Главная</a></li>
+                <li><a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' and not request.GET.category %}active{% endif %}">Все товары</a></li>
+                {% for category in categories %}
+                    <li><a href="{% url 'product_list' %}?category={{ category.id }}" class="{% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}">{{ category.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Сообщения -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Основной контент -->
+    <main class="container mt-4 mb-5">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Футер -->
+    <footer style="background: var(--text-dark); color: white; padding: 40px 0; margin-top: 60px;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 style="font-weight: 600; margin-bottom: 20px;">SportZone</h5>
+                    <p style="color: rgba(255,255,255,0.8); line-height: 1.8;">
+                        Спортивные товары по доступным ценам с доставкой по всей России. 
+                    </p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 style="font-weight: 600; margin-bottom: 20px;">Контакты</h5>
+                    <div style="color: rgba(255,255,255,0.8); line-height: 2;">
+                        <p><i class="fas fa-phone me-2"></i> +7 917 013-68-60</p>
+                        <p><i class="fab fa-telegram me-2"></i> Telegram</p>
+                        <p><i class="fab fa-whatsapp me-2"></i> WhatsApp</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 style="font-weight: 600; margin-bottom: 20px;">Быстрые ссылки</h5>
+                    <ul style="list-style: none; padding: 0; color: rgba(255,255,255,0.8);">
+                        <li class="mb-2"><a href="{% url 'home' %}" style="color: rgba(255,255,255,0.8);">Главная</a></li>
+                        <li class="mb-2"><a href="{% url 'product_list' %}" style="color: rgba(255,255,255,0.8);">Каталог</a></li>
+                        {% if user.is_authenticated %}
+                            <li class="mb-2"><a href="{% url 'profile' %}" style="color: rgba(255,255,255,0.8);">Профиль</a></li>
+                            <li class="mb-2"><a href="{% url 'order_history' %}" style="color: rgba(255,255,255,0.8);">История заказов</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            <hr style="border-color: rgba(255,255,255,0.2); margin: 30px 0;">
+            <div class="text-center" style="color: rgba(255,255,255,0.6);">
+                <p>&copy; 2025 SportZone. Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

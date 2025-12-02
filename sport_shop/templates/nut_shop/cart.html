@@ -1,0 +1,76 @@
+{% extends 'nut_shop/base.html' %}
+{% load static %}
+
+{% block title %}Корзина - Орех Маркет{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="section-title">Корзина</h1>
+    
+    {% if items %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="cart-items">
+                    {% for item in items %}
+                    <div class="cart-item">
+                        {% if item.variant.product.main_image %}
+                            <img src="{{ item.variant.product.main_image.image.url }}" alt="{{ item.variant.product.name }}" class="cart-item-image">
+                        {% else %}
+                            <div class="cart-item-image" style="background: var(--bg-light); display: flex; align-items: center; justify-content: center; color: var(--text-light);">
+                                <i class="fas fa-image" style="font-size: 2rem;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="cart-item-details">
+                            <h5 class="cart-item-title">{{ item.variant.product.name }}</h5>
+                            <p style="color: var(--text-light); margin-bottom: 10px;">Вес: {{ item.variant.weight }}г</p>
+                            <p class="cart-item-price">{{ item.item_total|floatformat:0 }} ₽</p>
+                            <p style="color: var(--text-light); font-size: 0.9rem;">{{ item.variant.price|floatformat:0 }} ₽ × {{ item.quantity }} шт.</p>
+                        </div>
+                        
+                        <div>
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="remove_variant" value="{{ item.variant.id }}">
+                                <button type="submit" class="btn btn-outline-danger" style="border-color: var(--accent-color); color: var(--accent-color);">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="cart-total">
+                    <h3 style="margin-bottom: 20px; font-weight: 600;">Итого</h3>
+                    <div class="total-row">
+                        <span>Товаров:</span>
+                        <span>{{ items|length }}</span>
+                    </div>
+                    <div class="total-row final">
+                        <span>К оплате:</span>
+                        <span>{{ total|floatformat:0 }} ₽</span>
+                    </div>
+                    <a href="{% url 'checkout' %}" class="btn-primary" style="width: 100%; margin-top: 20px; display: block; text-align: center; color: white; text-decoration: none;">
+                        <i class="fas fa-credit-card me-2"></i>Оформить заказ
+                    </a>
+                    <a href="{% url 'product_list' %}" class="btn-outline" style="width: 100%; margin-top: 15px; display: block; text-align: center; text-decoration: none;">
+                        Продолжить покупки
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center" style="padding: 80px 20px;">
+            <i class="fas fa-shopping-cart" style="font-size: 5rem; color: var(--text-light); margin-bottom: 30px;"></i>
+            <h3 style="color: var(--text-dark); margin-bottom: 15px;">Ваша корзина пуста</h3>
+            <p style="color: var(--text-light); margin-bottom: 30px;">Добавьте товары в корзину, чтобы продолжить</p>
+            <a href="{% url 'product_list' %}" class="btn-primary" style="display: inline-block; color: white; text-decoration: none;">
+                <i class="fas fa-shopping-bag me-2"></i>Перейти к покупкам
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

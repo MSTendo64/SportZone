@@ -1,0 +1,39 @@
+{% extends 'nut_shop/base.html' %}
+
+{% block title %}Мои заказы - SportZone{% endblock %}
+
+{% block content %}
+<h1>Мои заказы</h1>
+
+{% if products_to_review %}
+<h2>Товары, ожидающие вашего отзыва:</h2>
+<ul>
+    {% for product in products_to_review %}
+    <li>
+        <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+        - <a href="{% url 'product_detail' product.id %}#review-form">Оставить отзыв</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<h2>История заказов:</h2>
+{% for order in orders %}
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Заказ #{{ order.id }}</h5>
+        <p class="card-text">Статус: {{ order.get_status_display }}</p>
+        <p class="card-text">Сумма: {{ order.total_price }} руб.</p>
+        <p class="card-text">Дата: {{ order.created_at|date:"d.m.Y H:i" }}</p>
+        <h6>Товары:</h6>
+        <ul>
+            {% for item in order.items.all %}
+            <li>{{ item.product_variant.product.name }} - {{ item.quantity }} шт.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% empty %}
+<p>У вас пока нет завершенных заказов.</p>
+{% endfor %}
+{% endblock %}

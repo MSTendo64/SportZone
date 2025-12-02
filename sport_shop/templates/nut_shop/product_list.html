@@ -1,0 +1,238 @@
+{% extends 'nut_shop/base.html' %}
+{% load static %}
+
+{% block title %}Каталог - SportZone{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filters-panel {
+        background: var(--bg-white);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .filter-group {
+        margin-bottom: 20px;
+    }
+    
+    .filter-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: block;
+        color: var(--text-dark);
+    }
+    
+    .price-range {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .price-range input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+    }
+    
+    .results-count {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalog-header">
+    <h1 class="catalog-title">
+        {% if query %}
+            Результаты поиска "{{ query }}"
+        {% elif current_category %}
+            {{ current_category.name }}
+        {% else %}
+            Каталог товаров
+        {% endif %}
+    </h1>
+    
+    <div class="sort-filter-container">
+        <form method="get" action="{% url 'product_list' %}" class="d-flex align-items-center gap-2">
+            {% if query %}<input type="hidden" name="query" value="{{ query }}">{% endif %}
+            {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+            <i class="fas fa-sort-amount-down" style="color: var(--text-light);"></i>
+            <select name="sort_by" class="sort-select" onchange="this.form.submit()">
+                <option value="name" {% if sort_by == 'name' %}selected{% endif %}>По названию</option>
+                <option value="price_asc" {% if sort_by == 'price_asc' %}selected{% endif %}>По цене ↑</option>
+                <option value="price_desc" {% if sort_by == 'price_desc' %}selected{% endif %}>По цене ↓</option>
+                <option value="popularity" {% if sort_by == 'popularity' %}selected{% endif %}>По популярности</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- Фильтры -->
+<div class="filters-panel">
+    <h4 style="margin-bottom: 20px; font-weight: 600;">Фильтры</h4>
+    <form method="get" action="{% url 'product_list' %}">
+        {% if query %}<input type="hidden" name="query" value="{{ query }}">{% endif %}
+        {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+        {% if sort_by %}<input type="hidden" name="sort_by" value="{{ sort_by }}">{% endif %}
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="filter-label">Цена</label>
+                <div class="price-range">
+                    <input type="number" name="min_price" placeholder="От" value="{{ min_price }}" min="0">
+                    <span>-</span>
+                    <input type="number" name="max_price" placeholder="До" value="{{ max_price }}" min="0">
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="filter-label">Вес</label>
+                <div class="price-range">
+                    <input type="number" name="min_weight" placeholder="От" value="{{ min_weight }}" min="0">
+                    <span>-</span>
+                    <input type="number" name="max_weight" placeholder="До" value="{{ max_weight }}" min="0">
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <label class="filter-label">Минимальный рейтинг</label>
+                <select name="min_rating" class="filter-select">
+                    <option value="">Любой</option>
+                    <option value="4" {% if min_rating == '4' %}selected{% endif %}>4+</option>
+                    <option value="3" {% if min_rating == '3' %}selected{% endif %}>3+</option>
+                    <option value="2" {% if min_rating == '2' %}selected{% endif %}>2+</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-primary">Применить фильтры</button>
+            <a href="{% url 'product_list' %}{% if category_id %}?category={{ category_id }}{% endif %}" class="btn-outline">Сбросить</a>
+        </div>
+    </form>
+</div>
+
+<!-- Результаты -->
+{% if products %}
+    <div class="results-count">
+        Найдено товаров: {{ products.paginator.count }}
+    </div>
+    
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card fade-in">
+            <a href="{% url 'product_detail' product.id %}" style="text-decoration: none; color: inherit;">
+                <!-- Бейдж -->
+                {% if product.order_count > 10 %}
+                    <span class="product-badge badge-hit">Хит</span>
+                {% elif forloop.counter <= 3 %}
+                    <span class="product-badge badge-new">Новинка</span>
+                {% endif %}
+                
+                <!-- Изображение -->
+                <div class="product-image-wrapper">
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light);">
+                            <i class="fas fa-image" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Информация о товаре -->
+                <div class="product-card-body">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    
+                    <!-- Рейтинг -->
+                    <div class="product-rating">
+                        <div class="stars">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= product.average_rating %}
+                                    <span class="star filled">★</span>
+                                {% else %}
+                                    <span class="star">☆</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if product.average_rating > 0 %}
+                            <span class="rating-value">({{ product.average_rating|floatformat:1 }})</span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Цена -->
+                    <div class="product-price">
+                        {% if product.get_cheapest_variant %}
+                            <span class="price-current">от {{ product.get_cheapest_variant.price|floatformat:0 }} ₽</span>
+                        {% else %}
+                            <span class="price-current">Цена по запросу</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Пагинация -->
+    {% if products.has_other_pages %}
+    <nav aria-label="Навигация по страницам" class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if products.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ products.previous_page_number }}{% if query %}&query={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                </li>
+            {% endif %}
+
+            {% for i in products.paginator.page_range %}
+                {% if products.number == i %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }}</span>
+                    </li>
+                {% elif i > products.number|add:'-3' and i < products.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ i }}{% if query %}&query={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if products.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ products.next_page_number }}{% if query %}&query={{ query }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% else %}
+    <div class="text-center" style="padding: 60px 20px;">
+        <i class="fas fa-search" style="font-size: 4rem; color: var(--text-light); margin-bottom: 20px;"></i>
+        <h3 style="color: var(--text-dark); margin-bottom: 10px;">Товары не найдены</h3>
+        <p style="color: var(--text-light);">Попробуйте изменить параметры поиска или фильтры</p>
+        <a href="{% url 'product_list' %}" class="btn-primary mt-3" style="display: inline-block; color: white; text-decoration: none;">
+            Сбросить фильтры
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

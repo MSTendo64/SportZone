@@ -1,0 +1,65 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/custom_admin.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{{ title }}</h1>
+    
+    <div class="tabbed-content">
+        <ul class="tabs">
+            {% for app_name, models in grouped_models.items %}
+                <li><a href="#{{ app_name|slugify }}">{{ app_name }}</a></li>
+            {% endfor %}
+        </ul>
+        
+        {% for app_name, models in grouped_models.items %}
+            <div id="{{ app_name|slugify }}" class="tab-content">
+                <h2>{{ app_name }}</h2>
+                <table>
+                    {% for model in models %}
+                        <tr>
+                            <th><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+                            <td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
+                            <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a></td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tabs li a');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach((tab) => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = e.target.getAttribute('href').slice(1);
+                    
+                    tabContents.forEach((content) => {
+                        content.style.display = 'none';
+                    });
+                    
+                    document.getElementById(targetId).style.display = 'block';
+                    
+                    tabs.forEach((t) => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+            
+            // Активируем первую вкладку по умолчанию
+            tabs[0].click();
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/custom_admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <img src="{% static 'images/logo.png' %}" alt="{{ site_header|default:_('Django administration') }}" height="32" style="margin-right: 10px; vertical-align: middle;">
+        {{ site_header|default:_('Django administration') }}
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block usertools %}
+<div id="user-tools">
+    {% if user.is_active and user.is_staff %}
+        {% block welcome-msg %}
+            {% translate 'Welcome,' %}
+            <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+        {% endblock %}
+    {% endif %}
+    {% block userlinks %}
+        {% if site_url %}
+            <a href="{{ site_url }}">{% translate 'View site' %}</a> /
+        {% endif %}
+        {% if user.is_active and user.is_staff %}
+            {% url 'django-admindocs-docroot' as docsroot %}
+            {% if docsroot %}
+                <a href="{{ docsroot }}">{% translate 'Documentation' %}</a> /
+            {% endif %}
+        {% endif %}
+        {% if user.has_usable_password %}
+            <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a> /
+        {% endif %}
+        <a href="{% url 'admin:logout' %}">{% translate 'Log out' %}</a>
+    {% endblock %}
+</div>
+{% endblock %}

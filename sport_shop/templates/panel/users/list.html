@@ -1,0 +1,90 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Пользователи - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">Пользователи</h2>
+</div>
+
+<div class="stat-card mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-md-10">
+            <input type="text" name="search" class="form-control" placeholder="Поиск пользователей..." value="{{ search_query }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary w-100">Поиск</button>
+        </div>
+    </form>
+</div>
+
+<div class="stat-card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Имя пользователя</th>
+                    <th>Email</th>
+                    <th>Персонал</th>
+                    <th>Активен</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user_obj in users %}
+                <tr>
+                    <td>{{ user_obj.id }}</td>
+                    <td>{{ user_obj.username }}</td>
+                    <td>{{ user_obj.email|default:"-" }}</td>
+                    <td>
+                        {% if user_obj.is_staff %}
+                            <span class="badge bg-success">Да</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Нет</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user_obj.is_active %}
+                            <span class="badge bg-success">Да</span>
+                        {% else %}
+                            <span class="badge bg-danger">Нет</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'panel_user_edit' user_obj.id %}" class="btn btn-sm btn-primary" title="Редактировать">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Пользователи не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if users.has_other_pages %}
+    <nav>
+        <ul class="pagination">
+            {% if users.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ users.previous_page_number }}">Предыдущая</a></li>
+            {% endif %}
+            {% for i in users.paginator.page_range %}
+                {% if users.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if users.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ users.next_page_number }}">Следующая</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+

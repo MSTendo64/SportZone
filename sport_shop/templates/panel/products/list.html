@@ -1,0 +1,100 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Товары - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">Товары</h2>
+    <a href="{% url 'panel_product_add' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Добавить товар
+    </a>
+</div>
+
+<div class="stat-card mb-4">
+    <form method="get" class="row g-3">
+        <div class="col-md-6">
+            <input type="text" name="search" class="form-control" placeholder="Поиск товаров..." value="{{ search_query }}">
+        </div>
+        <div class="col-md-4">
+            <select name="category" class="form-control">
+                <option value="">Все категории</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-primary w-100">Поиск</button>
+        </div>
+    </form>
+</div>
+
+<div class="stat-card">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th>Вариантов</th>
+                    <th>Цена от</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.id }}</td>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.category.name }}</td>
+                    <td>{{ product.variants.count }}</td>
+                    <td>
+                        {% if product.get_cheapest_variant %}
+                            {{ product.get_cheapest_variant.price|floatformat:0 }} ₽
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'panel_product_edit' product.id %}" class="btn btn-sm btn-primary" title="Редактировать">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'panel_product_delete' product.id %}" class="btn btn-sm btn-danger" title="Удалить">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Товары не найдены</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if products.has_other_pages %}
+    <nav>
+        <ul class="pagination">
+            {% if products.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ products.previous_page_number }}">Предыдущая</a></li>
+            {% endif %}
+            {% for i in products.paginator.page_range %}
+                {% if products.number == i %}
+                    <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                {% endif %}
+            {% endfor %}
+            {% if products.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ products.next_page_number }}">Следующая</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+

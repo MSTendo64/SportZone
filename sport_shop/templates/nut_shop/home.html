@@ -1,0 +1,188 @@
+{% extends 'nut_shop/base.html' %}
+{% load static %}
+
+{% block title %}Главная - SportZone{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #2d5a86 0%, #1f495d 100%);
+        color: white;
+        padding: 60px 0;
+        margin: -30px -20px 40px -20px;
+        border-radius: 0;
+    }
+    
+    .hero-content {
+        text-align: center;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 30px;
+    }
+    
+    .features-section {
+        background: var(--bg-white);
+        padding: 50px 0;
+        margin: 40px -20px;
+        border-radius: 0;
+    }
+    
+    .feature-card {
+        text-align: center;
+        padding: 30px 20px;
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+    
+    .feature-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text-dark);
+    }
+    
+    .feature-text {
+        color: var(--text-light);
+        line-height: 1.6;
+    }
+    
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 1.8rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero секция -->
+<div class="hero-section">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">Добро пожаловать в SportZone!</h1>
+            <p class="hero-subtitle">Спортивные товары по доступным ценам с доставкой</p>
+            <a href="{% url 'product_list' %}" class="btn-primary" style="display: inline-block; color: white; text-decoration: none;">
+                Перейти в каталог
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Преимущества -->
+<div class="features-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <h3 class="feature-title">Лучшая цена</h3>
+                    <p class="feature-text">Доступные цены на спортивные товары, т.к. мы напрямую работаем с поставщиками из восточных стран.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <h3 class="feature-title">Высокое качество</h3>
+                    <p class="feature-text">Наши спортивные товары отличаются непревзойденным качеством — вся продукция сертифицирована.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <h3 class="feature-title">Быстрая доставка</h3>
+                    <p class="feature-text">Своевременная доставка по всей России. Гарантируем свежесть и качество товаров.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Популярные товары -->
+<div class="container">
+    <h2 class="section-title">Популярные товары</h2>
+    
+    {% if products %}
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card fade-in">
+                <a href="{% url 'product_detail' product.id %}" style="text-decoration: none; color: inherit;">
+                    <!-- Бейдж -->
+                    {% if product.order_count > 10 %}
+                        <span class="product-badge badge-hit">Хит</span>
+                    {% endif %}
+                    
+                    <!-- Изображение -->
+                    <div class="product-image-wrapper">
+                        {% if product.main_image %}
+                            <img src="{{ product.main_image.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-light);">
+                                <i class="fas fa-image" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Информация о товаре -->
+                    <div class="product-card-body">
+                        <h3 class="product-title">{{ product.name }}</h3>
+                        
+                        <!-- Рейтинг -->
+                        <div class="product-rating">
+                            <div class="stars">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= product.average_rating %}
+                                        <span class="star filled">★</span>
+                                    {% else %}
+                                        <span class="star">☆</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% if product.average_rating > 0 %}
+                                <span class="rating-value">({{ product.average_rating|floatformat:1 }})</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Цена -->
+                        <div class="product-price">
+                            {% if product.get_cheapest_variant %}
+                                <span class="price-current">от {{ product.get_cheapest_variant.price|floatformat:0 }} ₽</span>
+                            {% else %}
+                                <span class="price-current">Цена по запросу</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center" style="padding: 60px 20px;">
+            <i class="fas fa-box-open" style="font-size: 4rem; color: var(--text-light); margin-bottom: 20px;"></i>
+            <p style="color: var(--text-light); font-size: 1.1rem;">Товары пока не добавлены</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

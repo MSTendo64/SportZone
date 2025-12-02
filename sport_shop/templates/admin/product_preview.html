@@ -1,0 +1,169 @@
+{% extends "nut_shop/base.html" %}
+{% load static %}
+
+{% block title %}Предпросмотр: {{ product.name }} - Орех Маркет{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .product-rating {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .stars {
+        font-size: 1.2em;
+        margin-right: 5px;
+    }
+    .star {
+        display: inline-block;
+        color: #d3d3d3;
+    }
+    .star.filled {
+        color: #ffd700;
+    }
+    .rating-value {
+        font-weight: bold;
+        color: #000;
+    }
+    .product-description {
+        font-size: 1.1em;
+        line-height: 1.6;
+        margin-top: 20px;
+    }
+    .product-description img, .product-description video {
+        max-width: 100%;
+        height: auto;
+    }
+    .product-description a {
+        color: #007bff;
+        text-decoration: none;
+    }
+    .product-description a:hover {
+        text-decoration: underline;
+    }
+    .product-images {
+        display: flex;
+        flex-direction: column;
+    }
+    .main-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        margin-bottom: 10px;
+    }
+    .thumbnail-container {
+        display: flex;
+        overflow-x: auto;
+        gap: 10px;
+    }
+    .thumbnail {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+    .thumbnail.active {
+        border-color: #007bff;
+    }
+    .variant-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .variant-button {
+        padding: 10px 15px;
+        border: 2px solid #007bff;
+        border-radius: 5px;
+        background-color: white;
+        color: #007bff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .variant-button.selected {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="product-images">
+                {% if product.images.all %}
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="main-image" id="mainImage">
+                    <div class="thumbnail-container">
+                        {% for image in product.images.all %}
+                            <img src="{{ image.image.url }}" alt="{{ product.name }}" class="thumbnail {% if forloop.first %}active{% endif %}" onclick="changeMainImage(this)">
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center p-5 bg-light">Изображение отсутствует</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h1>{{ product.name }}</h1>
+            <div class="product-rating">
+                <span class="stars">
+                    {% for i in "12345"|make_list %}
+                        {% if forloop.counter <= product.average_rating %}
+                            <span class="star filled">★</span>
+                        {% else %}
+                            <span class="star">☆</span>
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                <span class="rating-value">{{ product.average_rating }}/5</span>
+            </div>
+            <div class="variant-selector">
+                {% for variant in product.variants.all %}
+                <label class="variant-button">
+                    <input type="radio" name="variant_id" value="{{ variant.id }}" style="display: none;">
+                    {{ variant.weight }}г за {{ variant.price }} ₽
+                </label>
+                {% endfor %}
+            </div>
+            <div class="product-description">
+                {{ formatted_description|safe }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function changeMainImage(thumbnail) {
+    const mainImage = document.getElementById('mainImage');
+    mainImage.src = thumbnail.src;
+    
+    document.querySelectorAll('.thumbnail').forEach(thumb => {
+        thumb.classList.remove('active');
+    });
+    
+    thumbnail.classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const variantButtons = document.querySelectorAll('.variant-button');
+
+    variantButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            variantButtons.forEach(btn => btn.classList.remove('selected'));
+            this.classList.add('selected');
+            this.querySelector('input[type="radio"]').checked = true;
+        });
+    });
+});
+</script>
+{% endblock %}

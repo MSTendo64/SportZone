@@ -1,0 +1,50 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Редактировать пользователя - Панель управления{% endblock %}
+
+{% block content %}
+<div class="panel-header">
+    <h2 style="margin: 0; font-weight: 600;">Редактировать пользователя</h2>
+    <a href="{% url 'panel_users' %}" class="btn btn-secondary">Назад</a>
+</div>
+
+<div class="stat-card">
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Имя пользователя</label>
+            <input type="text" name="username" class="form-control" value="{{ user.username }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ user.email }}">
+        </div>
+        <div class="mb-3">
+            <div class="form-check">
+                <input type="checkbox" name="is_staff" class="form-check-input" {% if user.is_staff %}checked{% endif %}>
+                <label class="form-check-label">Персонал</label>
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-check">
+                <input type="checkbox" name="is_active" class="form-check-input" {% if user.is_active %}checked{% endif %}>
+                <label class="form-check-label">Активен</label>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Группы</label>
+            {% for group in groups %}
+            <div class="form-check">
+                <input type="checkbox" name="groups" value="{{ group.id }}" class="form-check-input" {% if group in user.groups.all %}checked{% endif %}>
+                <label class="form-check-label">{{ group.name }}</label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="{% url 'panel_users' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
